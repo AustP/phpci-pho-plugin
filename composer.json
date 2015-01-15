@@ -1,0 +1,25 @@
+{
+  "name": "austp/phpci-pho-plugin",
+  "description": "A BDD testing framework plugin for PHPCI",
+  "keywords": [
+    "bdd", "behavior driven development", "framework", "pho", "test", "unit", "phpci", "plugin"
+  ],
+  "homepage": "https://github.com/austp/phpci-pho-plugin",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Aust P",
+      "email": "austp17@gmail.com"
+    }
+  ],
+  "require": {
+    "danielstjules/pho": "~1.1"
+  },
+  "support": {
+    "issues": "https://github.com/austp/phpci-pho-plugin/issues",
+    "source": "https://github.com/austp/phpci-pho-plugin"
+  },
+  "autoload": {
+    "psr-4": { "PHPCI_Pho_Plugin\\": "src/" }
+  }
+}
