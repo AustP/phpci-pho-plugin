@@ -110,7 +110,9 @@ class Pho implements \PHPCI\Plugin
       $this->phpci->logFailure(Lang::get('no_tests_performed'));
       return false;
     } elseif ($failures > 0) {
-      $this->phpci->logFailure(implode(PHP_EOL, $output));
+      if(!$this->log)
+        $this->phpci->logFailure($output);
+      
       return false;
     } else {
       return true;
