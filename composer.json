@@ -2,7 +2,7 @@
   "name": "austp/phpci-pho-plugin",
   "description": "A plugin for PHPCI to run pho tests",
   "keywords": [
-    "bdd", "behavior driven development", "framework", "pho", "test", "unit", "phpci", "plugin"
+    "phpci", "plugin", "pho", "test", "bdd"
   ],
   "homepage": "https://github.com/austp/phpci-pho-plugin",
   "license": "MIT",
