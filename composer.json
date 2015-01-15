@@ -1,6 +1,6 @@
 {
   "name": "austp/phpci-pho-plugin",
-  "description": "A BDD testing framework plugin for PHPCI",
+  "description": "A plugin for PHPCI to run pho tests",
   "keywords": [
     "bdd", "behavior driven development", "framework", "pho", "test", "unit", "phpci", "plugin"
   ],
