@@ -98,6 +98,8 @@ class Pho implements \PHPCI\Plugin
     $this->phpci->executeCommand($cmd);
     $output = $this->phpci->getLastOutput();
 
+    $this->phpci->logExecOutput(true);
+
     if($this->log)
       $this->phpci->log($output);
 
@@ -106,13 +108,16 @@ class Pho implements \PHPCI\Plugin
     $specs = $matches[1];
     $failures = $matches[2];
 
+    $this->build->storeMeta('pho-errors', $failures);
+    $this->build->storeMeta('pho-data', $output);
+
     if ($specs == 0) {
       $this->phpci->logFailure(Lang::get('no_tests_performed'));
       return false;
     } elseif ($failures > 0) {
       if(!$this->log)
         $this->phpci->logFailure($output);
-      
+
       return false;
     } else {
       return true;
