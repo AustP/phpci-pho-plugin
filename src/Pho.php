@@ -100,12 +100,12 @@ class Pho implements \PHPCI\Plugin
 
     $this->phpci->logExecOutput(true);
 
-    if($this->log)
+    if ($this->log)
       $this->phpci->log($output);
 
     $output = explode('Finished in ', $output);
     $specs = $output[0];
-    $metadata = preg_split("~\r\n|\n|\r~", $output[1], PREG_SPLIT_NO_EMPTY);
+    $metadata = preg_split("~\r\n|\n|\r~", $output[1]);
 
     $seconds = 'Finished in ' . $metadata[0];
     $specData = $metadata[1];
@@ -116,8 +116,8 @@ class Pho implements \PHPCI\Plugin
     $failureCount = $matches[2];
 
     $specs = explode('Failures:', $specs);
-    $expectations = preg_split("~\r\n|\n|\r~", $specs[0], PREG_SPLIT_NO_EMPTY);
-    $specFailures = $specs[1];
+    $expectations = preg_split("~\r\n|\n|\r~", $specs[0]);
+    $specFailures = isset($specs[1])? 'Failures:' . $specs[1]: '';
 
     $data = array(
       'metadata'=>array(
@@ -131,12 +131,19 @@ class Pho implements \PHPCI\Plugin
     $previousIndents = 0;
     $parentIndex = 0;
     $index = -1;
-    foreach($expectations as $expectation){
-      $indents = substr_count($expectation, "\t");
+    foreach ($expectations as $expectation) {
+      $match = array();
+      preg_match("~^(\s*)~", $expectation, $match);
+      $indents = substr_count($match[1], " ")/4;
 
-      if($indents > $previousIndents){
+      if ($indents > $previousIndents) {
         $data['expectations'][$index]['definition'] = true;
         $parentIndex = $index;
+      } elseif ($indents && $indents < $previousIndents) {
+        $times = $previousIndents - $indents;
+        for($i=0; $i<$times; $i++){
+          $parentIndex = $data['expectations'][$parentIndex]['parent'];
+        }
       }
 
       $previousIndents = $indents;
@@ -145,38 +152,64 @@ class Pho implements \PHPCI\Plugin
       $expectationData = array(
         'definition'=>false,
         'parent'=>$indents? $parentIndex: null,
-        'content'=>str_replace("\t", "&nbsp;&nbsp;", $expectation),
-        'success'=>true
+        'content'=>trim($expectation),
+        'success'=>true,
+        'indents'=>$indents
       );
 
       $fullExpectation = $expectationData['content'];
       $parent = $expectationData['parent'];
-      while($parent !== null){
-        $fullExpectation = trim($data[$parent]['content']) . ' ' . trim($fullExpectation);
-        $parent = $data[$parent]['parent'];
+      while ($parent !== null) {
+        $fullExpectation = $data['expectations'][$parent]['content'] . ' ' . $fullExpectation;
+        $parent = $data['expectations'][$parent]['parent'];
       }
-      $expectationMap[trim($fullExpectation)] = $index;
+      $expectationMap[$fullExpectation] = $index;
 
       $data['expectations'][] = $expectationData;
     }
 
-    if($specFailures){
-      $dir = explode(DIRECTORY_SEPARATOR, dirname(__FILE__));
-      $dir = implode(DIRECTORY_SEPARATOR, array_slice($dir, 0, -4));
-
+    if ($specFailures) {
       $matches = array();
-      preg_match_all("~\"(.+)\" FAILED(\r\n|\n|\r)" . $dir . "/PHPCI/build/\d+/(.+)~", $specFailures, $matches);
-      foreach($matches as $match){
-        $expectation = $match[1];
-        $file = $match[2];
+      preg_match_all("~\"(.+?)\" FAILED\s+(.+)\s+(.+)~", $specFailures, $matches);
+      foreach ($matches[0] as $i=>$match) {
+        $expectation = $matches[1][$i];
+        $file = $matches[2][$i];
+        $expected = $matches[3][$i];
 
         $index = $expectationMap[$expectation];
-        if($index > -1){
-          $data['expectations'][$index]['success'] = false;
-          $data['expectations'][$index]['file'] = $file;
+        $data['expectations'][$index]['success'] = false;
+        $data['expectations'][$index]['f'] = $file;
+        $data['expectations'][$index]['e'] = $expected;
+
+        $parent = $data['expectations'][$index]['parent'];
+        while ($parent !== null) {
+          $data['expectations'][$parent]['success'] = false;
+          $parent = $data['expectations'][$parent]['parent'];
         }
       }
     }
+
+    foreach ($data['expectations'] as $i=>$expectation) {
+      if ($expectation['success']) {
+        unset($data['expectations'][$i]);
+        continue;
+      }
+
+      unset($data['expectations'][$i]['parent']);
+
+      $data['expectations'][$i]['d'] = $expectation['definition'];
+      unset($data['expectations'][$i]['definition']);
+
+      $data['expectations'][$i]['c'] = $expectation['content'];
+      unset($data['expectations'][$i]['content']);
+
+      $data['expectations'][$i]['s'] = (int)$expectation['success'];
+      unset($data['expectations'][$i]['success']);
+
+      $data['expectations'][$i]['i'] = $expectation['indents'];
+      unset($data['expectations'][$i]['indents']);
+    }
+    $data['expectations'] = array_values($data['expectations']);
 
     $this->build->storeMeta('pho-errors', $failureCount);
     $this->build->storeMeta('pho-data', $data);
@@ -185,8 +218,8 @@ class Pho implements \PHPCI\Plugin
       $this->phpci->logFailure(Lang::get('no_tests_performed'));
       return false;
     } elseif ($failureCount > 0) {
-      if(!$this->log)
-        $this->phpci->logFailure($output);
+      if (!$this->log)
+        $this->phpci->logFailure($specFailures);
 
       return false;
     } else {
