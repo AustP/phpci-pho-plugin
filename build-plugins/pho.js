@@ -34,8 +34,10 @@ var phoPlugin = ActiveBuild.UiPlugin.extend({
   },
 
   onUpdate: function(e) {
-    if (!e.queryData)
+    if (!e.queryData) {
+      $('#build-pho-errors').hide();
       return;
+    }
 
     this.rendered = true;
     this.lastData = e.queryData;
