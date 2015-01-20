@@ -7,16 +7,16 @@ to run [pho](https://github.com/danielstjules/pho) tests via PHPCI.
 2. Edit the composer.json file. `nano composer.json`
 3. Add `"austp\/phpci-pho-plugin": "~1.1"` in the `"require"` section.
 
-       "require": {
+        "require": {
           ...,
           ...,
           "austp\/phpci-pho-plugin": "~1.1"
-       }
+        }
 4. Download the plugin via composer. `composer update austp/phpci-pho-plugin`
 5. Copy `build-plugins/pho.js` to `/path/to/phpci/public/assets/js/build-plugins/pho.js`
 
-       cd /path/to/phpci/vendor/austp/phpci-pho-plugin/build-plugins
-       cp pho.js /path/to/phpci/public/assets/js/build-plugins/pho.js
+        cd /path/to/phpci/vendor/austp/phpci-pho-plugin/build-plugins
+        cp pho.js /path/to/phpci/public/assets/js/build-plugins/pho.js
 
 That's it as far as installation goes. Continue reading to see available options.
 
