@@ -53,18 +53,13 @@ var phoPlugin = ActiveBuild.UiPlugin.extend({
 
       var file = expectation.f;
       var index = 0;
-      if (file[0] == '/') {
-        index = file.indexOf('PHPCI/build/');
-        file = file.substr(index + 12);
-        file = file.split('/').slice(1).join('/');
-      } else {
-        index = file.indexOf('PHPCI\\build\\');
-        file = file.substr(index + 12);
-        file = file.split('\\').slice(1).join('\\');
-      }
+      var DS = file[0] == '/'? '/': '\\';
 
-      html += file;
-      html += '</em></td>';
+      index = file.indexOf('PHPCI' + DS + 'build' + DS);
+      file = file.substr(index + 12);
+      file = file.split(DS).slice(1).join(DS);
+
+      html += file + '</em></td>';
 
       var tr = document.createElement('tr');
       tr.className = 'danger';
