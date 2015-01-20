@@ -48,42 +48,23 @@ var phoPlugin = ActiveBuild.UiPlugin.extend({
 
     for (var i=0, l=tests.expectations.length; i<l; i++) {
       var expectation = tests.expectations[i];
-      var html = (expectation.d? '<th>': '<td>');
-
-      for (j=0; j<expectation.i; j++) {
-        html += '&nbsp;&nbsp;&nbsp;&nbsp;';
-      }
-
-      html += expectation.c;
+      var html = '<td><b>' + expectation.d + '</b><br>' +
+      expectation.e + '<br><em>';
 
       var file = expectation.f;
-      if (file) {
-        var index = 0;
-        if (file[0] == '/') {
-          index = file.indexOf('PHPCI/build/');
-          file = file.substr(index + 12);
-          file = file.split('/').slice(1).join('/');
-        } else {
-          index = file.indexOf('PHPCI\\build\\');
-          file = file.substr(index + 12);
-          file = file.split('\\').slice(1).join('\\');
-        }
-        html += '<br><b>';
-
-        for (j=0; j<expectation.i; j++) {
-          html += '&nbsp;&nbsp;&nbsp;&nbsp;';
-        }
-
-        html += expectation.e + '<br>';
-
-        for (j=0; j<expectation.i; j++) {
-          html += '&nbsp;&nbsp;&nbsp;&nbsp;';
-        }
-
-        html += file + '</b>';
+      var index = 0;
+      if (file[0] == '/') {
+        index = file.indexOf('PHPCI/build/');
+        file = file.substr(index + 12);
+        file = file.split('/').slice(1).join('/');
+      } else {
+        index = file.indexOf('PHPCI\\build\\');
+        file = file.substr(index + 12);
+        file = file.split('\\').slice(1).join('\\');
       }
 
-      html += (expectation.d? '</th>': '</td>');
+      html += file;
+      html += '</em></td>';
 
       var tr = document.createElement('tr');
       tr.className = 'danger';

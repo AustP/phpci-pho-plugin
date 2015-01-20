@@ -115,10 +115,6 @@ class Pho implements \PHPCI\Plugin
     $specCount = $matches[1];
     $failureCount = $matches[2];
 
-    $specs = explode('Failures:', $specs);
-    $expectations = preg_split("~\r\n|\n|\r~", $specs[0]);
-    $specFailures = isset($specs[1])? 'Failures:' . $specs[1]: '';
-
     $data = array(
       'metadata'=>array(
         'seconds'=>$seconds,
@@ -126,90 +122,24 @@ class Pho implements \PHPCI\Plugin
       ),
       'expectations'=>array()
     );
-    $expectationMap = array();
-    $definitions = array();
-    $previousIndents = 0;
-    $parentIndex = 0;
-    $index = -1;
-    foreach ($expectations as $expectation) {
-      $match = array();
-      preg_match("~^(\s*)~", $expectation, $match);
-      $indents = substr_count($match[1], " ")/4;
 
-      if ($indents > $previousIndents) {
-        $data['expectations'][$index]['definition'] = true;
-        $parentIndex = $index;
-      } elseif ($indents && $indents < $previousIndents) {
-        $times = $previousIndents - $indents;
-        for($i=0; $i<$times; $i++){
-          $parentIndex = $data['expectations'][$parentIndex]['parent'];
-        }
-      }
-
-      $previousIndents = $indents;
-      $index++;
-
-      $expectationData = array(
-        'definition'=>false,
-        'parent'=>$indents? $parentIndex: null,
-        'content'=>trim($expectation),
-        'success'=>true,
-        'indents'=>$indents
-      );
-
-      $fullExpectation = $expectationData['content'];
-      $parent = $expectationData['parent'];
-      while ($parent !== null) {
-        $fullExpectation = $data['expectations'][$parent]['content'] . ' ' . $fullExpectation;
-        $parent = $data['expectations'][$parent]['parent'];
-      }
-      $expectationMap[$fullExpectation] = $index;
-
-      $data['expectations'][] = $expectationData;
-    }
-
+    $specs = explode('Failures:', $specs);
+    $specFailures = isset($specs[1])? 'Failures:' . $specs[1]: '';
     if ($specFailures) {
       $matches = array();
       preg_match_all("~\"(.+?)\" FAILED\s+(.+)\s+(.+)~", $specFailures, $matches);
       foreach ($matches[0] as $i=>$match) {
-        $expectation = $matches[1][$i];
+        $definition = $matches[1][$i];
         $file = $matches[2][$i];
         $expected = $matches[3][$i];
 
-        $index = $expectationMap[$expectation];
-        $data['expectations'][$index]['success'] = false;
-        $data['expectations'][$index]['f'] = $file;
-        $data['expectations'][$index]['e'] = $expected;
-
-        $parent = $data['expectations'][$index]['parent'];
-        while ($parent !== null) {
-          $data['expectations'][$parent]['success'] = false;
-          $parent = $data['expectations'][$parent]['parent'];
-        }
+        $data['expectations'][] = array(
+          'd'=>$definition,
+          'f'=>$file,
+          'e'=>$expected
+        );
       }
     }
-
-    foreach ($data['expectations'] as $i=>$expectation) {
-      if ($expectation['success']) {
-        unset($data['expectations'][$i]);
-        continue;
-      }
-
-      unset($data['expectations'][$i]['parent']);
-
-      $data['expectations'][$i]['d'] = $expectation['definition'];
-      unset($data['expectations'][$i]['definition']);
-
-      $data['expectations'][$i]['c'] = $expectation['content'];
-      unset($data['expectations'][$i]['content']);
-
-      $data['expectations'][$i]['s'] = (int)$expectation['success'];
-      unset($data['expectations'][$i]['success']);
-
-      $data['expectations'][$i]['i'] = $expectation['indents'];
-      unset($data['expectations'][$i]['indents']);
-    }
-    $data['expectations'] = array_values($data['expectations']);
 
     $this->build->storeMeta('pho-errors', $failureCount);
     $this->build->storeMeta('pho-data', $data);
