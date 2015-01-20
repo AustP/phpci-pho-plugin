@@ -49,17 +49,8 @@ var phoPlugin = ActiveBuild.UiPlugin.extend({
     for (var i=0, l=tests.expectations.length; i<l; i++) {
       var expectation = tests.expectations[i];
       var html = '<td><b>' + expectation.d + '</b><br>' +
-      expectation.e + '<br><em>';
-
-      var file = expectation.f;
-      var index = 0;
-      var DS = file[0] == '/'? '/': '\\';
-
-      index = file.indexOf('PHPCI' + DS + 'build' + DS);
-      file = file.substr(index + 12);
-      file = file.split(DS).slice(1).join(DS);
-
-      html += file + '</em></td>';
+      expectation.e + '<br>' +
+      '<em>' + expectation.f + '</em></td>';
 
       var tr = document.createElement('tr');
       tr.className = 'danger';
